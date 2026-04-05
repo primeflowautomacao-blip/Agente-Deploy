@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agente Deploy</title>
+<title>Orquestrador do Crispim</title>
 <meta name="theme-color" content="#0a0a0a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Agente Deploy">
+<meta name="apple-mobile-web-app-title" content="Orquestrador do Crispim">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
@@ -375,7 +375,7 @@
 
 <!-- HEADER -->
 <header>
-  <div class="logo">▸ AGENTE DEPLOY</div>
+  <div class="logo">▸ ORQUESTRADOR DO CRISPIM</div>
   <div class="status-bar">
     <div class="status-dot" id="groq-dot"></div>
     <div class="status-dot" id="gh-dot"></div>
@@ -414,8 +414,8 @@
 <!-- CHAT -->
 <div id="chat">
   <div class="welcome" id="welcome-msg">
-    <h2>Pronto para deployar.</h2>
-    <p>Diz o que queres criar.<br>O agente trata do resto.</p>
+    <h2>Orquestrador do Crispim, pronto.</h2>
+    <p>Diz o que queres criar.<br>O orquestrador trata do resto.</p>
   </div>
 </div>
 
@@ -449,7 +449,7 @@ let config = {};
 
 function loadConfig() {
   try {
-    const saved = localStorage.getItem('agente_config');
+    const saved = localStorage.getItem('crispim_config');
     if (saved) {
       config = JSON.parse(saved);
       if (config.groqKey) document.getElementById('groq-key').value = config.groqKey;
@@ -475,7 +475,7 @@ function saveConfig() {
     alert('Preenche todos os campos.');
     return;
   }
-  localStorage.setItem('agente_config', JSON.stringify(config));
+  localStorage.setItem('crispim_config', JSON.stringify(config));
   updateDots();
   document.getElementById('setup-panel').classList.add('hidden');
 }
@@ -499,7 +499,7 @@ function appendMsg(role, html) {
   const chat = document.getElementById('chat');
   const div = document.createElement('div');
   div.className = 'msg ' + role;
-  const avatar = role === 'user' ? 'TU' : 'AG';
+  const avatar = role === 'user' ? 'TU' : 'CR';
   div.innerHTML = `
     <div class="msg-avatar">${avatar}</div>
     <div class="msg-content">${html}</div>
@@ -516,7 +516,7 @@ function appendTyping() {
   div.className = 'msg agent';
   div.id = 'typing-msg';
   div.innerHTML = `
-    <div class="msg-avatar">AG</div>
+    <div class="msg-avatar">CR</div>
     <div class="msg-content">
       <div class="typing-indicator"><span></span><span></span><span></span></div>
     </div>
@@ -594,7 +594,7 @@ async function githubPush(repoName, filename, content) {
     }
   } catch(e) {}
 
-  const body = { message: 'deploy via agente', content: encoded };
+  const body = { message: 'deploy via orquestrador do crispim', content: encoded };
   if (sha) body.sha = sha;
 
   const res = await fetch(`https://api.github.com/repos/${config.ghUser}/${repoName}/contents/${filename}`, {
@@ -672,7 +672,7 @@ async function renderDeploy(repoName, serviceName) {
 }
 
 // ─── SYSTEM PROMPT ────────────────────────────────────────
-const SYSTEM_PROMPT = `És um agente de deploy web com acesso total ao GitHub e Render do utilizador via API. Podes criar sites, fazer deploy, listar repositórios, apagar repositórios e gerir serviços.
+const SYSTEM_PROMPT = `És o Orquestrador do Crispim — um agente de deploy web com acesso total ao GitHub e Render do utilizador via API. Podes criar sites, fazer deploy, listar repositórios, apagar repositórios e gerir serviços.
 
 IMPORTANTE: Tens acesso real ao GitHub e Render do utilizador. Quando pedido, AGES — não explicas como fazer manualmente.
 
