@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Orquestrador do Crispim</title>
+<title>Orquestrador do Crispim v2</title>
 <meta name="theme-color" content="#0a0a0a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Orquestrador do Crispim">
+<meta name="apple-mobile-web-app-title" content="Orquestrador v2">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
@@ -17,13 +17,17 @@
   :root {
     --bg: #0a0a0a;
     --surface: #111111;
+    --surface2: #161616;
     --border: #222222;
     --accent: #00ff88;
-    --accent-dim: rgba(0,255,136,0.1);
+    --accent-dim: rgba(0,255,136,0.08);
+    --accent-border: rgba(0,255,136,0.2);
     --text: #e8e8e8;
     --muted: #555;
     --error: #ff4444;
     --warn: #ffaa00;
+    --info: #4488ff;
+    --purple: #aa88ff;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -44,29 +48,68 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
+    padding: 10px 16px;
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
+    gap: 12px;
   }
 
   .logo {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--accent);
     letter-spacing: 0.05em;
+    white-space: nowrap;
   }
 
-  .status-bar {
-    display: flex;
-    gap: 8px;
-    align-items: center;
+  .logo span {
+    color: var(--muted);
+    font-weight: 400;
   }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* MODE TOGGLE */
+  .mode-toggle {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .mode-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .mode-btn.active {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-right: 1px solid var(--accent-border);
+  }
+
+  .mode-btn:last-child.active { border-right: none; border-left: 1px solid var(--accent-border); }
+
+  .status-bar { display: flex; gap: 6px; align-items: center; }
 
   .status-dot {
     width: 6px; height: 6px;
     border-radius: 50%;
     background: var(--muted);
+    flex-shrink: 0;
   }
   .status-dot.ok { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
   .status-dot.warn { background: var(--warn); }
@@ -76,11 +119,12 @@
     border: 1px solid var(--border);
     color: var(--muted);
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
+    font-size: 10px;
     padding: 4px 10px;
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s;
+    white-space: nowrap;
   }
   .btn-settings:hover { border-color: var(--accent); color: var(--accent); }
 
@@ -108,31 +152,31 @@
 
   .setup-title {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 15px;
+    font-size: 14px;
     color: var(--accent);
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
 
   .setup-subtitle {
     color: var(--muted);
     font-size: 12px;
-    margin-bottom: 24px;
+    margin-bottom: 22px;
     line-height: 1.5;
   }
 
-  .field { margin-bottom: 16px; }
+  .field { margin-bottom: 14px; }
 
   .field label {
     display: block;
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
+    font-size: 10px;
     color: var(--muted);
-    margin-bottom: 6px;
+    margin-bottom: 5px;
     letter-spacing: 0.05em;
     text-transform: uppercase;
   }
 
-  .field input {
+  .field input, .field select {
     width: 100%;
     background: var(--bg);
     border: 1px solid var(--border);
@@ -144,8 +188,9 @@
     outline: none;
     transition: border-color 0.2s;
   }
-  .field input:focus { border-color: var(--accent); }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
   .field input::placeholder { color: var(--muted); }
+  .field select option { background: var(--bg); }
 
   .btn-save {
     width: 100%;
@@ -170,7 +215,7 @@
     padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     scroll-behavior: smooth;
   }
 
@@ -187,15 +232,16 @@
   .msg.user { flex-direction: row-reverse; }
 
   .msg-avatar {
-    width: 28px; height: 28px;
+    width: 26px; height: 26px;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
+    font-size: 9px;
     flex-shrink: 0;
+    font-weight: 600;
   }
 
-  .msg.user .msg-avatar { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent); }
+  .msg.user .msg-avatar { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-border); }
   .msg.agent .msg-avatar { background: #1a1a1a; color: var(--muted); border: 1px solid var(--border); }
 
   .msg-content {
@@ -203,14 +249,14 @@
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 10px 14px;
-    max-width: calc(100% - 44px);
+    max-width: calc(100% - 40px);
     line-height: 1.6;
     font-size: 13px;
   }
 
   .msg.user .msg-content {
     background: var(--accent-dim);
-    border-color: rgba(0,255,136,0.2);
+    border-color: var(--accent-border);
     color: var(--text);
   }
 
@@ -236,25 +282,156 @@
     color: var(--accent);
   }
 
-  /* ACTIONS dentro da mensagem */
+  /* AGENT PIPELINE DISPLAY */
+  .pipeline-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 4px 0;
+  }
+
+  .pipeline-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .agent-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    border: 1px solid currentColor;
+  }
+
+  .badge-manager { color: var(--accent); background: rgba(0,255,136,0.08); }
+  .badge-builder { color: var(--info); background: rgba(68,136,255,0.08); }
+  .badge-critic  { color: var(--warn); background: rgba(255,170,0,0.08); }
+  .badge-improver{ color: var(--purple); background: rgba(170,136,255,0.08); }
+
+  .pipeline-body { padding: 10px 12px; font-size: 12px; }
+
+  /* SCORE BAR */
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 6px 0;
+  }
+
+  .score-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    width: 42px;
+    flex-shrink: 0;
+  }
+
+  .score-bar-wrap {
+    flex: 1;
+    background: var(--border);
+    border-radius: 3px;
+    height: 4px;
+    overflow: hidden;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+  }
+
+  .score-number {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    width: 30px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* ITERATIONS */
+  .iter-row {
+    display: flex;
+    gap: 4px;
+    margin: 6px 0 2px;
+  }
+
+  .iter-dot {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+  }
+
+  .iter-dot.done { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  .iter-dot.current { background: rgba(255,170,0,0.1); border-color: var(--warn); color: var(--warn); animation: pulse-warn 1s infinite; }
+  .iter-dot.approved { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+  @keyframes pulse-warn {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* ACTION ITEMS */
   .action-item {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 0;
+    padding: 5px 0;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 11px;
     color: var(--muted);
   }
-  .action-item .icon { font-size: 13px; }
+  .action-item .icon { font-size: 12px; flex-shrink: 0; }
   .action-item.done { color: var(--accent); }
   .action-item.running { color: var(--warn); }
   .action-item.error { color: var(--error); }
 
+  .problems-list {
+    margin: 6px 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .problems-list li {
+    font-size: 11px;
+    color: var(--muted);
+    padding: 2px 0 2px 14px;
+    position: relative;
+    line-height: 1.4;
+  }
+
+  .problems-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--warn);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
   .link-result {
     display: inline-block;
-    margin-top: 8px;
-    padding: 6px 12px;
+    margin-top: 10px;
+    padding: 7px 14px;
     background: var(--accent);
     color: #000;
     border-radius: 5px;
@@ -262,6 +439,35 @@
     font-size: 11px;
     font-weight: 600;
     text-decoration: none;
+  }
+
+  .decision-box {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .decision-box.approved {
+    background: rgba(0,255,136,0.08);
+    border: 1px solid rgba(0,255,136,0.25);
+    color: var(--accent);
+  }
+
+  .decision-box.rejected {
+    background: rgba(255,170,0,0.08);
+    border: 1px solid rgba(255,170,0,0.25);
+    color: var(--warn);
+  }
+
+  .decision-box.failed {
+    background: rgba(255,68,68,0.08);
+    border: 1px solid rgba(255,68,68,0.25);
+    color: var(--error);
   }
 
   /* TYPING */
@@ -286,7 +492,7 @@
   /* INPUT AREA */
   #input-area {
     border-top: 1px solid var(--border);
-    padding: 12px 16px;
+    padding: 10px 16px;
     flex-shrink: 0;
     background: var(--bg);
   }
@@ -294,7 +500,7 @@
   .quick-actions {
     display: flex;
     gap: 6px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     overflow-x: auto;
     padding-bottom: 2px;
   }
@@ -364,22 +570,58 @@
   }
   .welcome h2 {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 16px;
+    font-size: 15px;
     color: var(--accent);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
   .welcome p { font-size: 13px; line-height: 1.6; }
+  .welcome .mode-hint {
+    margin-top: 16px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    text-align: left;
+    font-size: 12px;
+  }
+  .welcome .mode-hint strong {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .divider {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--border);
+    text-align: center;
+    padding: 4px 0;
+    letter-spacing: 0.1em;
+    user-select: none;
+  }
 </style>
 </head>
 <body>
 
 <!-- HEADER -->
 <header>
-  <div class="logo">▸ ORQUESTRADOR DO CRISPIM</div>
-  <div class="status-bar">
-    <div class="status-dot" id="groq-dot"></div>
-    <div class="status-dot" id="gh-dot"></div>
-    <div class="status-dot" id="render-dot"></div>
+  <div class="logo">▸ CRISPIM <span>v2</span></div>
+
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="btn-single" onclick="setMode('single')">SINGLE</button>
+    <button class="mode-btn" id="btn-multi" onclick="setMode('multi')">MULTI-AGENT</button>
+  </div>
+
+  <div class="header-right">
+    <div class="status-bar">
+      <div class="status-dot" id="groq-dot" title="Groq"></div>
+      <div class="status-dot" id="gh-dot" title="GitHub"></div>
+      <div class="status-dot" id="render-dot" title="Render"></div>
+    </div>
     <button class="btn-settings" onclick="openSetup()">⚙ config</button>
   </div>
 </header>
@@ -387,12 +629,21 @@
 <!-- SETUP PANEL -->
 <div id="setup-panel">
   <div class="setup-box">
-    <div class="setup-title">// configuração inicial</div>
-    <div class="setup-subtitle">Introduz as tuas chaves uma vez. Ficam guardadas localmente no browser.</div>
+    <div class="setup-title">// configuração</div>
+    <div class="setup-subtitle">Chaves guardadas localmente. Nunca enviadas para servidores externos.</div>
 
     <div class="field">
       <label>Groq API Key</label>
       <input type="password" id="groq-key" placeholder="gsk_..." />
+    </div>
+    <div class="field">
+      <label>Groq Model</label>
+      <select id="groq-model">
+        <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile (recomendado)</option>
+        <option value="llama3-8b-8192">llama3-8b-8192 (mais rápido)</option>
+        <option value="mixtral-8x7b-32768">mixtral-8x7b (contexto longo)</option>
+        <option value="gemma2-9b-it">gemma2-9b (leve)</option>
+      </select>
     </div>
     <div class="field">
       <label>GitHub Token</label>
@@ -414,25 +665,34 @@
 <!-- CHAT -->
 <div id="chat">
   <div class="welcome" id="welcome-msg">
-    <h2>Orquestrador do Crispim, pronto.</h2>
-    <p>Diz o que queres criar.<br>O orquestrador trata do resto.</p>
+    <h2>Orquestrador do Crispim v2</h2>
+    <p>Agora com sistema multi-agente.<br>O Manager controla a qualidade antes do deploy.</p>
+    <div class="mode-hint">
+      <strong>Modo SINGLE</strong>
+      Geração directa. 1 chamada Groq. Rápido.
+    </div>
+    <div class="mode-hint" style="margin-top:8px">
+      <strong>Modo MULTI-AGENT</strong>
+      Builder → Critic → Improver (máx. 3x) → Manager decide → Deploy.
+      Score ≥ 7 aprova automaticamente.
+    </div>
   </div>
 </div>
 
 <!-- INPUT -->
 <div id="input-area">
   <div class="quick-actions">
-    <div class="chip" onclick="quickSend('Cria um site de restaurante moderno')">🍽 restaurante</div>
-    <div class="chip" onclick="quickSend('Cria uma landing page para um negócio de beleza')">💅 beleza</div>
-    <div class="chip" onclick="quickSend('Cria um portfolio pessoal minimalista')">👤 portfolio</div>
-    <div class="chip" onclick="quickSend('Cria uma landing page para uma startup de tech')">🚀 startup</div>
-    <div class="chip" onclick="quickSend('Cria um site para uma clínica médica')">🏥 clínica</div>
+    <div class="chip" onclick="quickSend('Cria um site de restaurante moderno com menu e reservas')">🍽 restaurante</div>
+    <div class="chip" onclick="quickSend('Cria uma landing page para um negócio de beleza e estética')">💅 beleza</div>
+    <div class="chip" onclick="quickSend('Cria um portfolio pessoal minimalista para um designer')">👤 portfolio</div>
+    <div class="chip" onclick="quickSend('Cria uma landing page para uma startup de tecnologia')">🚀 startup</div>
+    <div class="chip" onclick="quickSend('Cria um site para uma clínica médica com serviços e contactos')">🏥 clínica</div>
     <div class="chip" onclick="quickSend('Lista os meus repositórios no GitHub')">📁 repos</div>
     <div class="chip" onclick="quickSend('Lista os meus serviços no Render')">🚀 render</div>
-    <div class="chip" onclick="quickSend('Apaga os repositórios que eu te indicar')">🗑 apagar repo</div>
+    <div class="chip" onclick="quickSend('Apaga os repositórios que eu te indicar')">🗑 apagar</div>
   </div>
   <div class="input-row">
-    <textarea id="user-input" placeholder="Ex: cria um site de restaurante com menu e reservas..." rows="1"
+    <textarea id="user-input" placeholder="Ex: cria um site para uma clínica dentária em Luanda..." rows="1"
       onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
     <button id="send-btn" onclick="sendMessage()">
       <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -444,18 +704,22 @@
 </div>
 
 <script>
-// ─── CONFIG ───────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════
 let config = {};
+let currentMode = 'single'; // 'single' | 'multi'
 
 function loadConfig() {
   try {
-    const saved = localStorage.getItem('crispim_config');
+    const saved = localStorage.getItem('crispim_config_v2');
     if (saved) {
       config = JSON.parse(saved);
       if (config.groqKey) document.getElementById('groq-key').value = config.groqKey;
       if (config.ghToken) document.getElementById('gh-token').value = config.ghToken;
       if (config.ghUser) document.getElementById('gh-user').value = config.ghUser;
       if (config.renderKey) document.getElementById('render-key').value = config.renderKey;
+      if (config.groqModel) document.getElementById('groq-model').value = config.groqModel;
       updateDots();
       if (config.groqKey && config.ghToken && config.ghUser && config.renderKey) {
         document.getElementById('setup-panel').classList.add('hidden');
@@ -467,6 +731,7 @@ function loadConfig() {
 function saveConfig() {
   config = {
     groqKey: document.getElementById('groq-key').value.trim(),
+    groqModel: document.getElementById('groq-model').value,
     ghToken: document.getElementById('gh-token').value.trim(),
     ghUser: document.getElementById('gh-user').value.trim(),
     renderKey: document.getElementById('render-key').value.trim(),
@@ -475,7 +740,7 @@ function saveConfig() {
     alert('Preenche todos os campos.');
     return;
   }
-  localStorage.setItem('crispim_config', JSON.stringify(config));
+  localStorage.setItem('crispim_config_v2', JSON.stringify(config));
   updateDots();
   document.getElementById('setup-panel').classList.add('hidden');
 }
@@ -490,10 +755,20 @@ function updateDots() {
   document.getElementById('render-dot').className = 'status-dot' + (config.renderKey ? ' ok' : ' warn');
 }
 
-// ─── CHAT HISTORY ─────────────────────────────────────────
+function setMode(m) {
+  currentMode = m;
+  document.getElementById('btn-single').classList.toggle('active', m === 'single');
+  document.getElementById('btn-multi').classList.toggle('active', m === 'multi');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CHAT STATE
+// ═══════════════════════════════════════════════════════════════
 let chatHistory = [];
 
-// ─── UI HELPERS ───────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════════
 function appendMsg(role, html) {
   document.getElementById('welcome-msg')?.remove();
   const chat = document.getElementById('chat');
@@ -546,63 +821,69 @@ function quickSend(text) {
   sendMessage();
 }
 
-// ─── GROQ ─────────────────────────────────────────────────
-async function callGroq(messages) {
+function scrollChat() {
+  const chat = document.getElementById('chat');
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GROQ API
+// ═══════════════════════════════════════════════════════════════
+async function callGroq(messages, maxTokens = 4000, temperature = 0.7) {
+  const model = config.groqModel || 'llama-3.3-70b-versatile';
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${config.groqKey}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      messages,
-      temperature: 0.7,
-      max_tokens: 4000
-    })
+    body: JSON.stringify({ model, messages, temperature, max_tokens: maxTokens })
   });
-  if (!res.ok) throw new Error('Groq error: ' + res.status);
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error('Groq error ' + res.status + ': ' + err.slice(0, 200));
+  }
   const data = await res.json();
   return data.choices[0].message.content;
 }
 
-// ─── GITHUB ───────────────────────────────────────────────
+function parseJSON(raw) {
+  const clean = raw.replace(/```json|```/g, '').trim();
+  // Find first { ... } block
+  const start = clean.indexOf('{');
+  const end = clean.lastIndexOf('}');
+  if (start === -1 || end === -1) throw new Error('No JSON found');
+  return JSON.parse(clean.slice(start, end + 1));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GITHUB
+// ═══════════════════════════════════════════════════════════════
 async function githubCreate(repoName) {
   const res = await fetch('https://api.github.com/user/repos', {
     method: 'POST',
-    headers: {
-      'Authorization': `token ${config.ghToken}`,
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Authorization': `token ${config.ghToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ name: repoName, private: false, auto_init: false })
   });
   if (!res.ok && res.status !== 422) throw new Error('GitHub create failed: ' + res.status);
-  return `https://github.com/${config.ghUser}/${repoName}`;
 }
 
 async function githubPush(repoName, filename, content) {
   const encoded = btoa(unescape(encodeURIComponent(content)));
-  // Check if file exists
-  let sha = undefined;
+  let sha;
   try {
     const check = await fetch(`https://api.github.com/repos/${config.ghUser}/${repoName}/contents/${filename}`, {
       headers: { 'Authorization': `token ${config.ghToken}` }
     });
-    if (check.ok) {
-      const d = await check.json();
-      sha = d.sha;
-    }
+    if (check.ok) sha = (await check.json()).sha;
   } catch(e) {}
 
-  const body = { message: 'deploy via orquestrador do crispim', content: encoded };
+  const body = { message: 'deploy via crispim v2', content: encoded };
   if (sha) body.sha = sha;
 
   const res = await fetch(`https://api.github.com/repos/${config.ghUser}/${repoName}/contents/${filename}`, {
     method: 'PUT',
-    headers: {
-      'Authorization': `token ${config.ghToken}`,
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Authorization': `token ${config.ghToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
   if (!res.ok) throw new Error('GitHub push failed: ' + res.status);
@@ -616,92 +897,338 @@ async function listRepos() {
   return await res.json();
 }
 
-// ─── RENDER ───────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════════
 async function renderDeploy(repoName, serviceName) {
   const repoUrl = `https://github.com/${config.ghUser}/${repoName}`;
-
-  // Check existing services
   const listRes = await fetch('https://api.render.com/v1/services?limit=20', {
     headers: { 'Authorization': `Bearer ${config.renderKey}` }
   });
-
   if (listRes.ok) {
     const listData = await listRes.json();
-    const existing = listData.find(item => item.service?.name === serviceName);
+    const existing = listData.find(i => i.service?.name === serviceName);
     if (existing) {
-      // Trigger redeploy
-      const deployRes = await fetch(`https://api.render.com/v1/services/${existing.service.id}/deploys`, {
+      await fetch(`https://api.render.com/v1/services/${existing.service.id}/deploys`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${config.renderKey}`,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Authorization': `Bearer ${config.renderKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ clearCache: 'do_not_clear' })
       });
       return existing.service.serviceDetails?.url || `https://${serviceName}.onrender.com`;
     }
   }
-
-  // Create new static site
   const res = await fetch('https://api.render.com/v1/services', {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${config.renderKey}`,
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Authorization': `Bearer ${config.renderKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      type: 'static_site',
-      name: serviceName,
-      ownerId: null,
-      repo: repoUrl,
-      branch: 'main',
-      serviceDetails: {
-        publishPath: '/',
-        pullRequestPreviewsEnabled: false,
-        buildCommand: ''
-      }
+      type: 'static_site', name: serviceName, ownerId: null,
+      repo: repoUrl, branch: 'main',
+      serviceDetails: { publishPath: '/', pullRequestPreviewsEnabled: false, buildCommand: '' }
     })
   });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error('Render deploy failed: ' + err);
-  }
+  if (!res.ok) throw new Error('Render deploy failed: ' + res.status);
   const data = await res.json();
   return data.serviceDetails?.url || `https://${serviceName}.onrender.com`;
 }
 
-// ─── SYSTEM PROMPT ────────────────────────────────────────
-const SYSTEM_PROMPT = `És o Orquestrador do Crispim — um agente de deploy web com acesso total ao GitHub e Render do utilizador via API. Podes criar sites, fazer deploy, listar repositórios, apagar repositórios e gerir serviços.
+// ═══════════════════════════════════════════════════════════════
+// PROMPT TEMPLATES (curtos e eficientes)
+// ═══════════════════════════════════════════════════════════════
 
-IMPORTANTE: Tens acesso real ao GitHub e Render do utilizador. Quando pedido, AGES — não explicas como fazer manualmente.
+const BUILDER_SYSTEM = `És um especialista em HTML. Gera um ficheiro HTML completo (inline CSS+JS).
+REGRAS: design moderno + responsivo, conteúdo real, sem dependências externas excepto Google Fonts.
+Responde APENAS com JSON: {"html":"...HTML completo aqui..."}
+Sem markdown. Sem texto antes ou depois.`;
 
-Responde SEMPRE com JSON válido (sem markdown, sem texto antes ou depois). Escolhe a action correcta:
+const CRITIC_SYSTEM = `És um auditor de qualidade de websites. Avalia HTML dado.
+Responde APENAS com JSON válido:
+{"score":0-10,"problems":["problema1","problema2"],"improvements":["melhoria1","melhoria2"]}
+score: 0-10 (7+ = aprovado). problems: lista de falhas. improvements: acções concretas.
+Sem markdown. Sem texto antes ou depois.`;
 
-1. CRIAR E DEPLOYAR SITE:
-{"action":"deploy","repoName":"nome-sem-espacos","siteName":"nome-render","html":"...HTML completo..."}
+const IMPROVER_SYSTEM = `És um especialista em melhorar HTML existente.
+Recebes HTML + lista de melhorias. Aplica TODAS as melhorias sem perder estrutura.
+Responde APENAS com JSON: {"html":"...HTML melhorado completo..."}
+Sem markdown. Sem texto antes ou depois.`;
 
-2. LISTAR REPOSITÓRIOS:
-{"action":"list_repos"}
+const SINGLE_SYSTEM = `És o Orquestrador do Crispim — agente de deploy web com acesso real ao GitHub e Render via API.
+Responde SEMPRE com JSON válido (sem markdown, sem texto extra):
 
-3. APAGAR REPOSITÓRIO(S):
-{"action":"delete_repos","repos":["nome-repo-1","nome-repo-2"]}
+1. DEPLOY: {"action":"deploy","repoName":"nome-sem-espacos","siteName":"nome-render","html":"...HTML completo..."}
+2. LISTAR REPOS: {"action":"list_repos"}
+3. APAGAR REPOS: {"action":"delete_repos","repos":["repo1","repo2"]}
+4. LISTAR RENDER: {"action":"list_render"}
+5. TEXTO: {"action":"text","message":"resposta"}
 
-4. LISTAR SERVIÇOS NO RENDER:
-{"action":"list_render"}
-
-5. RESPOSTA DE TEXTO (para perguntas gerais):
-{"action":"text","message":"a tua resposta aqui"}
-
-Regras para o HTML:
-- Ficheiro único completo (inline CSS e JS)
-- Profissional, moderno e responsivo
-- Conteúdo real e relevante
-- Sem dependências externas excepto Google Fonts
-
+HTML: ficheiro único, inline CSS+JS, moderno, responsivo, conteúdo real, só Google Fonts.
 Responde sempre em português.`;
 
-// ─── MAIN SEND ────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// MULTI-AGENT ORCHESTRATION
+// ═══════════════════════════════════════════════════════════════
+
+const MAX_ITERATIONS = 3;
+const APPROVE_SCORE = 7;
+
+async function runMultiAgent(userRequest, bubble) {
+  // Render helpers
+  function renderPipelineCard(agentType, headerText, bodyHTML) {
+    const badges = {
+      manager: ['badge-manager', 'MGR'],
+      builder: ['badge-builder', 'BLD'],
+      critic:  ['badge-critic',  'CRT'],
+      improver:['badge-improver','IMP'],
+    };
+    const [cls, lbl] = badges[agentType] || ['badge-manager', '?'];
+    return `
+      <div class="pipeline-card" style="margin-bottom:8px">
+        <div class="pipeline-header">
+          <span class="agent-badge ${cls}">${lbl}</span>
+          ${headerText}
+        </div>
+        <div class="pipeline-body">${bodyHTML}</div>
+      </div>`;
+  }
+
+  function renderIterDots(current, total, approved) {
+    let html = '<div class="iter-row">';
+    for (let i = 1; i <= total; i++) {
+      let cls = '';
+      if (approved && i === current) cls = 'approved';
+      else if (i < current) cls = 'done';
+      else if (i === current) cls = 'current';
+      html += `<div class="iter-dot ${cls}">${i}</div>`;
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function renderScoreBar(score) {
+    const pct = (score / 10) * 100;
+    const color = score >= 7 ? 'var(--accent)' : score >= 4 ? 'var(--warn)' : 'var(--error)';
+    const scoreColor = score >= 7 ? 'var(--accent)' : score >= 4 ? 'var(--warn)' : 'var(--error)';
+    return `
+      <div class="score-row">
+        <div class="score-label">Score</div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-fill" style="width:${pct}%;background:${color}"></div>
+        </div>
+        <div class="score-number" style="color:${scoreColor}">${score}/10</div>
+      </div>`;
+  }
+
+  let html = '';
+  let iteration = 0;
+  let approved = false;
+  let finalScore = 0;
+  let fullLog = '';
+
+  // ── STEP 1: MANAGER starts ──
+  fullLog += renderPipelineCard('manager', 'Iniciar pipeline',
+    `<div style="font-size:12px;color:var(--muted)">Pedido: <span style="color:var(--text)">"${escapeHtml(userRequest)}"</span></div>
+     <div style="margin-top:6px;font-size:11px;color:var(--muted)">Máx. iterações: ${MAX_ITERATIONS} · Score mínimo: ${APPROVE_SCORE}/10</div>`
+  );
+  bubble.innerHTML = fullLog;
+  scrollChat();
+
+  // ── STEP 2: BUILDER generates HTML ──
+  fullLog += renderPipelineCard('builder', 'A gerar HTML...',
+    `<div class="typing-indicator"><span></span><span></span><span></span></div>`
+  );
+  bubble.innerHTML = fullLog;
+  scrollChat();
+
+  try {
+    const builderRaw = await callGroq([
+      { role: 'system', content: BUILDER_SYSTEM },
+      { role: 'user', content: `Cria um site completo para: ${userRequest}` }
+    ], 4000, 0.8);
+
+    const built = parseJSON(builderRaw);
+    html = built.html;
+
+    // Replace loading in builder card
+    fullLog = fullLog.replace(
+      '<div class="typing-indicator"><span></span><span></span><span></span></div>',
+      `<div class="action-item done"><span class="icon">✓</span>HTML gerado (${(html.length/1000).toFixed(1)}kb)</div>`
+    );
+    bubble.innerHTML = fullLog;
+    scrollChat();
+
+  } catch(e) {
+    fullLog += renderPipelineCard('manager', 'Erro fatal',
+      `<div class="decision-box failed">✕ Builder falhou: ${escapeHtml(e.message)}</div>`
+    );
+    bubble.innerHTML = fullLog;
+    scrollChat();
+    return;
+  }
+
+  // ── MAIN LOOP: Critic → Improver ──
+  while (iteration < MAX_ITERATIONS && !approved) {
+    iteration++;
+
+    // Critic evaluates
+    fullLog += renderPipelineCard('critic', `Iteração ${iteration}/${MAX_ITERATIONS} · A avaliar...`,
+      `<div class="typing-indicator"><span></span><span></span><span></span></div>`
+    );
+    bubble.innerHTML = fullLog;
+    scrollChat();
+
+    let criticResult;
+    try {
+      const criticRaw = await callGroq([
+        { role: 'system', content: CRITIC_SYSTEM },
+        { role: 'user', content: `Avalia este HTML:\n${html.slice(0, 6000)}` }
+      ], 600, 0.3);
+
+      criticResult = parseJSON(criticRaw);
+      finalScore = criticResult.score || 0;
+      const problems = criticResult.problems || [];
+      const improvements = criticResult.improvements || [];
+
+      let criticBody = renderScoreBar(finalScore);
+      criticBody += renderIterDots(iteration, MAX_ITERATIONS, finalScore >= APPROVE_SCORE);
+
+      if (problems.length) {
+        criticBody += `<div style="margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Problemas</div>`;
+        criticBody += `<ul class="problems-list">${problems.slice(0, 4).map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>`;
+      }
+
+      // Replace loading
+      fullLog = fullLog.replace(
+        `<div class="typing-indicator"><span></span><span></span><span></span></div>`,
+        criticBody
+      );
+      bubble.innerHTML = fullLog;
+      scrollChat();
+
+    } catch(e) {
+      // Critic failed — assume score 5 to trigger one more iteration
+      criticResult = { score: 5, problems: ['Critic falhou: ' + e.message], improvements: ['Rever estrutura geral'] };
+      finalScore = 5;
+      fullLog = fullLog.replace(
+        `<div class="typing-indicator"><span></span><span></span><span></span></div>`,
+        `<div style="color:var(--warn);font-size:11px">⚠ Critic falhou, assumir score 5</div>`
+      );
+      bubble.innerHTML = fullLog;
+      scrollChat();
+    }
+
+    // Manager decision
+    if (finalScore >= APPROVE_SCORE) {
+      approved = true;
+      fullLog += renderPipelineCard('manager', 'Decisão: APROVADO',
+        `<div class="decision-box approved">✓ Score ${finalScore}/10 ≥ ${APPROVE_SCORE} · A avançar para deploy</div>`
+      );
+      bubble.innerHTML = fullLog;
+      scrollChat();
+      break;
+    }
+
+    if (iteration >= MAX_ITERATIONS) {
+      // Max iterations reached, deploy anyway
+      fullLog += renderPipelineCard('manager', 'Limite atingido',
+        `<div class="decision-box rejected">◎ ${MAX_ITERATIONS} iterações completas · Score final: ${finalScore}/10 · A fazer deploy com melhor versão</div>`
+      );
+      bubble.innerHTML = fullLog;
+      scrollChat();
+      break;
+    }
+
+    // Send to Improver
+    const improvements = criticResult.improvements || [];
+    fullLog += renderPipelineCard('improver', `A melhorar HTML (iteração ${iteration})...`,
+      `<div class="typing-indicator"><span></span><span></span><span></span></div>`
+    );
+    bubble.innerHTML = fullLog;
+    scrollChat();
+
+    try {
+      const improverRaw = await callGroq([
+        { role: 'system', content: IMPROVER_SYSTEM },
+        { role: 'user', content: `HTML actual:\n${html.slice(0, 5000)}\n\nMelhorias a aplicar:\n${improvements.map((im, i) => `${i+1}. ${im}`).join('\n')}` }
+      ], 4000, 0.6);
+
+      const improved = parseJSON(improverRaw);
+      if (improved.html && improved.html.length > 200) {
+        html = improved.html;
+      }
+
+      fullLog = fullLog.replace(
+        `<div class="typing-indicator"><span></span><span></span><span></span></div>`,
+        `<div class="action-item done"><span class="icon">✓</span>${improvements.length} melhorias aplicadas · HTML: ${(html.length/1000).toFixed(1)}kb</div>`
+      );
+    } catch(e) {
+      fullLog = fullLog.replace(
+        `<div class="typing-indicator"><span></span><span></span><span></span></div>`,
+        `<div style="color:var(--warn);font-size:11px">⚠ Improver falhou, usar versão anterior</div>`
+      );
+    }
+    bubble.innerHTML = fullLog;
+    scrollChat();
+  }
+
+  // ── DEPLOY ──
+  return { html, approved, finalScore };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DEPLOY (shared between single & multi)
+// ═══════════════════════════════════════════════════════════════
+async function executeDeploy(bubble, repoName, siteName, html, preamble = '') {
+  const steps = [
+    { id: 'repo', label: `Criar repo: ${repoName}` },
+    { id: 'push', label: 'Push index.html' },
+    { id: 'render', label: 'Deploy no Render' },
+  ];
+
+  function renderSteps(activeId, doneIds, errorId) {
+    return preamble + steps.map(s => {
+      let cls = 'action-item';
+      let icon = '○';
+      if (doneIds.includes(s.id)) { cls += ' done'; icon = '✓'; }
+      else if (s.id === activeId) { cls += ' running'; icon = '◌'; }
+      else if (s.id === errorId) { cls += ' error'; icon = '✕'; }
+      return `<div class="${cls}"><span class="icon">${icon}</span>${s.label}</div>`;
+    }).join('');
+  }
+
+  const done = [];
+  try {
+    bubble.innerHTML = renderSteps('repo', done, null);
+    await githubCreate(repoName);
+    done.push('repo');
+
+    bubble.innerHTML = renderSteps('push', done, null);
+    await githubPush(repoName, 'index.html', html);
+    done.push('push');
+
+    bubble.innerHTML = renderSteps('render', done, null);
+    let url;
+    try {
+      url = await renderDeploy(repoName, siteName);
+    } catch(e) {
+      url = `https://${config.ghUser}.github.io/${repoName}`;
+    }
+    done.push('render');
+
+    bubble.innerHTML = renderSteps(null, done, null) +
+      `<div style="margin-top:10px;font-size:12px;color:var(--muted)">GitHub: <a href="https://github.com/${config.ghUser}/${repoName}" target="_blank" style="color:var(--accent)">github.com/${config.ghUser}/${repoName}</a></div>` +
+      `<a href="${url}" target="_blank" class="link-result">▸ Ver site ao vivo</a>`;
+
+  } catch(e) {
+    const failedStep = done.length === 0 ? 'repo' : steps[done.length]?.id;
+    bubble.innerHTML = renderSteps(null, done, failedStep) +
+      `<div style="margin-top:8px;color:var(--error);font-size:12px">Erro: ${escapeHtml(e.message)}</div>`;
+  }
+
+  scrollChat();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN SEND
+// ═══════════════════════════════════════════════════════════════
 async function sendMessage() {
   const input = document.getElementById('user-input');
   const text = input.value.trim();
@@ -713,120 +1240,134 @@ async function sendMessage() {
   document.getElementById('send-btn').disabled = true;
 
   appendMsg('user', escapeHtml(text));
-  appendTyping();
 
-  chatHistory.push({ role: 'user', content: text });
-
-  try {
-    const messages = [
-      { role: 'system', content: SYSTEM_PROMPT },
-      ...chatHistory
-    ];
-
-    const reply = await callGroq(messages);
-    chatHistory.push({ role: 'assistant', content: reply });
-
-    removeTyping();
-
-    // Try to parse as action
-    let parsed = null;
-    try {
-      const clean = reply.replace(/```json|```/g, '').trim();
-      parsed = JSON.parse(clean);
-    } catch(e) {}
-
-    if (parsed && parsed.action === 'deploy') {
-      await handleDeploy(parsed);
-    } else if (parsed && parsed.action === 'list_repos') {
-      await handleListRepos();
-    } else if (parsed && parsed.action === 'delete_repos') {
-      await handleDeleteRepos(parsed.repos || []);
-    } else if (parsed && parsed.action === 'list_render') {
-      await handleListRender();
-    } else if (parsed && parsed.action === 'text') {
-      appendMsg('agent', formatText(parsed.message || reply));
-    } else {
-      appendMsg('agent', formatText(reply));
-    }
-
-  } catch(e) {
-    removeTyping();
-    appendMsg('agent', `<span style="color:var(--error)">Erro: ${escapeHtml(e.message)}</span>`);
+  if (currentMode === 'multi') {
+    await sendMultiAgent(text);
+  } else {
+    await sendSingle(text);
   }
 
   document.getElementById('send-btn').disabled = false;
 }
 
-async function handleDeploy(parsed) {
+// ── SINGLE AGENT (original behaviour) ──
+async function sendSingle(text) {
+  appendTyping();
+  chatHistory.push({ role: 'user', content: text });
+
+  try {
+    const messages = [{ role: 'system', content: SINGLE_SYSTEM }, ...chatHistory];
+    const reply = await callGroq(messages, 4000, 0.7);
+    chatHistory.push({ role: 'assistant', content: reply });
+    removeTyping();
+
+    let parsed = null;
+    try { parsed = parseJSON(reply); } catch(e) {}
+
+    if (parsed?.action === 'deploy') {
+      await handleSingleDeploy(parsed);
+    } else if (parsed?.action === 'list_repos') {
+      await handleListRepos();
+    } else if (parsed?.action === 'delete_repos') {
+      await handleDeleteRepos(parsed.repos || []);
+    } else if (parsed?.action === 'list_render') {
+      await handleListRender();
+    } else if (parsed?.action === 'text') {
+      appendMsg('agent', formatText(parsed.message || reply));
+    } else {
+      appendMsg('agent', formatText(reply));
+    }
+  } catch(e) {
+    removeTyping();
+    appendMsg('agent', `<span style="color:var(--error)">Erro: ${escapeHtml(e.message)}</span>`);
+  }
+}
+
+async function handleSingleDeploy(parsed) {
   const bubble = appendMsg('agent', '');
   const repoName = parsed.repoName || 'site-' + Date.now();
   const siteName = parsed.siteName || repoName;
 
-  const steps = [
-    { id: 'gen', label: 'Código gerado' },
-    { id: 'repo', label: `Criar repo: ${repoName}` },
-    { id: 'push', label: 'Push index.html' },
-    { id: 'render', label: 'Deploy no Render' },
-  ];
-
-  function renderSteps(activeId, doneIds, errorId) {
-    return steps.map(s => {
-      let cls = 'action-item';
-      let icon = '○';
-      if (doneIds.includes(s.id)) { cls += ' done'; icon = '✓'; }
-      else if (s.id === activeId) { cls += ' running'; icon = '◌'; }
-      else if (s.id === errorId) { cls += ' error'; icon = '✕'; }
-      return `<div class="${cls}"><span class="icon">${icon}</span>${s.label}</div>`;
-    }).join('');
-  }
-
-  const done = [];
-
-  try {
-    // Step 1 - already done
-    done.push('gen');
-    bubble.innerHTML = renderSteps('repo', done, null);
-    await githubCreate(repoName);
-
-    done.push('repo');
-    bubble.innerHTML = renderSteps('push', done, null);
-    await githubPush(repoName, 'index.html', parsed.html);
-
-    done.push('push');
-    bubble.innerHTML = renderSteps('render', done, null);
-
-    let url;
-    try {
-      url = await renderDeploy(repoName, siteName);
-      done.push('render');
-    } catch(renderErr) {
-      // Render failed but site is on GitHub Pages
-      done.push('render');
-      url = `https://${config.ghUser}.github.io/${repoName}`;
-    }
-
-    bubble.innerHTML = renderSteps(null, done, null) +
-      `<div style="margin-top:10px;font-size:12px;color:var(--muted)">GitHub: <a href="https://github.com/${config.ghUser}/${repoName}" target="_blank" style="color:var(--accent)">github.com/${config.ghUser}/${repoName}</a></div>` +
-      `<a href="${url}" target="_blank" class="link-result">▸ Ver site ao vivo</a>`;
-
-  } catch(e) {
-    const failedStep = done.length === 0 ? 'gen' : steps[done.length]?.id;
-    bubble.innerHTML = renderSteps(null, done, failedStep) +
-      `<div style="margin-top:8px;color:var(--error);font-size:12px">Erro: ${escapeHtml(e.message)}</div>`;
-  }
-
-  document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+  bubble.innerHTML = `<div class="action-item done"><span class="icon">✓</span>HTML gerado</div>`;
+  await executeDeploy(bubble, repoName, siteName, parsed.html,
+    `<div class="action-item done"><span class="icon">✓</span>HTML gerado</div>`
+  );
 }
 
+// ── MULTI AGENT ──
+async function sendMultiAgent(text) {
+  const bubble = appendMsg('agent', '');
+
+  // Detect if it's a deploy request or utility
+  const isDeployRequest = /cria|criar|site|página|landing|web|deploy/i.test(text);
+
+  if (!isDeployRequest) {
+    // Route to single for utility commands (list, delete, etc.)
+    bubble.innerHTML = `<div style="font-size:12px;color:var(--muted)">Comando de gestão → modo directo</div>`;
+    await sendSingleUtility(text, bubble);
+    return;
+  }
+
+  // Run multi-agent pipeline
+  const result = await runMultiAgent(text, bubble);
+  if (!result) return;
+
+  const { html, approved, finalScore } = result;
+
+  // Auto-generate repo/site names from the request
+  const slug = text.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40) || 'site';
+  const repoName = slug + '-' + Date.now().toString(36);
+  const siteName = repoName;
+
+  // Append deploy section below pipeline
+  const deployDiv = document.createElement('div');
+  deployDiv.style.cssText = 'margin-top:8px';
+  bubble.appendChild(deployDiv);
+
+  await executeDeploy(deployDiv, repoName, siteName, html,
+    `<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">DEPLOY · Score final: ${finalScore}/10</div>`
+  );
+}
+
+// For non-deploy commands in multi-agent mode
+async function sendSingleUtility(text, bubble) {
+  try {
+    const messages = [{ role: 'system', content: SINGLE_SYSTEM }, { role: 'user', content: text }];
+    const reply = await callGroq(messages, 1000, 0.3);
+    let parsed = null;
+    try { parsed = parseJSON(reply); } catch(e) {}
+
+    if (parsed?.action === 'list_repos') {
+      await handleListReposInBubble(bubble);
+    } else if (parsed?.action === 'delete_repos') {
+      await handleDeleteRepos(parsed.repos || []);
+    } else if (parsed?.action === 'list_render') {
+      await handleListRenderInBubble(bubble);
+    } else {
+      bubble.innerHTML = formatText(parsed?.message || reply);
+    }
+  } catch(e) {
+    bubble.innerHTML = `<span style="color:var(--error)">Erro: ${escapeHtml(e.message)}</span>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UTILITY HANDLERS
+// ═══════════════════════════════════════════════════════════════
 async function handleListRepos() {
   const bubble = appendMsg('agent', '<div style="color:var(--muted);font-size:12px">A carregar repositórios...</div>');
+  await handleListReposInBubble(bubble);
+}
+
+async function handleListReposInBubble(bubble) {
   try {
     const repos = await listRepos();
-    if (!repos.length) {
-      bubble.innerHTML = 'Não encontrei repositórios.';
-      return;
-    }
-    let html = '<div style="font-size:12px;margin-bottom:6px;color:var(--muted)">Os teus repositórios:</div>';
+    if (!repos.length) { bubble.innerHTML = 'Nenhum repositório encontrado.'; return; }
+    let html = '<div style="font-size:12px;margin-bottom:6px;color:var(--muted)">Repositórios:</div>';
     repos.forEach(r => {
       html += `<div style="padding:4px 0;border-bottom:1px solid var(--border)">
         <a href="${r.html_url}" target="_blank" style="color:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:12px">${r.name}</a>
@@ -835,19 +1376,13 @@ async function handleListRepos() {
     });
     bubble.innerHTML = html;
   } catch(e) {
-    bubble.innerHTML = `<span style="color:var(--error)">Erro ao listar repos: ${escapeHtml(e.message)}</span>`;
+    bubble.innerHTML = `<span style="color:var(--error)">Erro: ${escapeHtml(e.message)}</span>`;
   }
 }
 
 async function handleDeleteRepos(repos) {
-  if (!repos.length) {
-    appendMsg('agent', '<span style="color:var(--warn)">Nenhum repositório especificado para apagar.</span>');
-    return;
-  }
-  const bubble = appendMsg('agent', '');
-  let html = `<div style="font-size:12px;margin-bottom:8px;color:var(--muted)">A apagar ${repos.length} repositório(s)...</div>`;
-  bubble.innerHTML = html;
-
+  if (!repos.length) { appendMsg('agent', '<span style="color:var(--warn)">Nenhum repo especificado.</span>'); return; }
+  const bubble = appendMsg('agent', `<div style="font-size:12px;color:var(--muted)">A apagar ${repos.length} repo(s)...</div>`);
   const results = [];
   for (const repo of repos) {
     try {
@@ -855,38 +1390,33 @@ async function handleDeleteRepos(repos) {
         method: 'DELETE',
         headers: { 'Authorization': `token ${config.ghToken}` }
       });
-      if (res.status === 204) {
-        results.push({ repo, ok: true });
-      } else {
-        results.push({ repo, ok: false, err: 'Status ' + res.status });
-      }
+      results.push({ repo, ok: res.status === 204 });
     } catch(e) {
       results.push({ repo, ok: false, err: e.message });
     }
   }
-
-  html = `<div style="font-size:12px;margin-bottom:8px;color:var(--muted)">Resultado:</div>`;
+  let html = '';
   results.forEach(r => {
-    if (r.ok) {
-      html += `<div class="action-item done"><span class="icon">✓</span>${escapeHtml(r.repo)} apagado</div>`;
-    } else {
-      html += `<div class="action-item error"><span class="icon">✕</span>${escapeHtml(r.repo)} — ${escapeHtml(r.err)}</div>`;
-    }
+    html += `<div class="action-item ${r.ok ? 'done' : 'error'}"><span class="icon">${r.ok ? '✓' : '✕'}</span>${escapeHtml(r.repo)} ${r.ok ? 'apagado' : ('— ' + (r.err || 'falhou'))}</div>`;
   });
   bubble.innerHTML = html;
-  document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+  scrollChat();
 }
 
 async function handleListRender() {
   const bubble = appendMsg('agent', '<div style="color:var(--muted);font-size:12px">A carregar serviços Render...</div>');
+  await handleListRenderInBubble(bubble);
+}
+
+async function handleListRenderInBubble(bubble) {
   try {
     const res = await fetch('https://api.render.com/v1/services?limit=20', {
       headers: { 'Authorization': `Bearer ${config.renderKey}` }
     });
     if (!res.ok) throw new Error('Status ' + res.status);
     const data = await res.json();
-    if (!data.length) { bubble.innerHTML = 'Nenhum serviço encontrado no Render.'; return; }
-    let html = `<div style="font-size:12px;margin-bottom:6px;color:var(--muted)">Serviços no Render:</div>`;
+    if (!data.length) { bubble.innerHTML = 'Nenhum serviço no Render.'; return; }
+    let html = `<div style="font-size:12px;margin-bottom:6px;color:var(--muted)">Serviços Render:</div>`;
     data.forEach(item => {
       const s = item.service || item;
       const url = s.serviceDetails?.url || '';
@@ -902,7 +1432,9 @@ async function handleListRender() {
   }
 }
 
-// ─── UTILS ────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════════
 function escapeHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
@@ -913,12 +1445,13 @@ function formatText(text) {
     .replace(/\n/g, '<br>');
 }
 
-// ─── INIT ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
 loadConfig();
 
-// Register Service Worker
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js").catch(() => {});
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 </script>
 </body>
